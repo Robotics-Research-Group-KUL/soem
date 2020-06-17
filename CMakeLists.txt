@@ -27,22 +27,6 @@ file(GLOB SOEM_COMMON_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/SOEM/soem/*.h")
 file(GLOB SOEM_OSAL_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/SOEM/osal/${OS}/*.h")
 file(GLOB SOEM_OSHW_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/SOEM/oshw/${OS}/*.h")
 
-# explicitely find pthread to be able to explicitely export the pthread dependency
-# see https://github.com/ros/ros_comm/issues/135
-set(PTHREAD_LIB "")
-find_package(Threads)
-if(CMAKE_THREAD_LIBS_INIT)
-  string(LENGTH ${CMAKE_THREAD_LIBS_INIT} _length)
-  if(_length GREATER 2)
-    string(SUBSTRING ${CMAKE_THREAD_LIBS_INIT} 0 2 _prefix)
-    if(${_prefix} STREQUAL "-l")
-      math(EXPR _rest_len "${_length} - 2")
-      string(SUBSTRING ${CMAKE_THREAD_LIBS_INIT} 2 ${_rest_len} PTHREAD_LIB)
-    endif()
-  endif()
-endif()
-
-
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   set(ament_cmake_cpplint_FOUND TRUE)
@@ -64,7 +48,6 @@ add_subdirectory(SOEM)
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
-ament_target_dependencies(${PROJECT_NAME} ${PTHREAD_LIB})
 
 #install all Headers
 install(
