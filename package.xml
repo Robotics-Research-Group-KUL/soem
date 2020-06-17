@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
-<package format="2">
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
   <name>soem</name>
   <version>1.4.0</version>
   <description>
-    ROS wrapper for the Simple Open EtherCAT Master SOEM.
-    This is an updated version of the original SOEM wrapper released into ROS now including
-    the upstream Repo as a git subtree.
+    ROS2 wrapper for the Simple Open EtherCAT Master SOEM.
   </description>
 
+  <maintainer email="plasberg@fzi.de">Carsten Plasberg</maintainer>
   <maintainer email="matthias.gruhler@gmail.com">Matthias Gruhler</maintainer>
 
   <license>GPLv2 with linking exception</license>
@@ -18,5 +18,12 @@
 
   <author>Arthur Ketels and M.J.G. van den Molengraft</author>
 
-  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 </package>

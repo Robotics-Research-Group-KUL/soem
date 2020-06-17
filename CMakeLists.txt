@@ -1,34 +1,21 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.5)
 project(soem)
 
-find_package(catkin REQUIRED)
+# Default to C99
+if(NOT CMAKE_C_STANDARD)
+  set(CMAKE_C_STANDARD 99)
+endif()
 
-message([=[
-        
-          SOEM ROS Package Upgrade Announcement
-          =====================================
-          
-          Prior, due to the code layout in soem, a workaround
-          has been necessary in users of this library.
-          This version solves this issue now by
-          providing proper cmake configuration files.
-          
-          If you've used the workaround of specifying
-          `${soem_INCLUDE_DIRS}/soem` in the include_directories section
-          in your code/library, you should remove this now.
-          
-          Also, this package has been upgraded to the upstream
-          SOEM release 1.4.0.
-          If you experience any problems, you can revert to
-          release v1.3.0 of this package to retrieve the old state.
-        ]=]
-       )
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
 
-# set-up destination variables
-catkin_destinations()
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra)
+endif()
 
-# create directory during CMake build system creation step
-file(MAKE_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+find_package(ament_cmake REQUIRED)
 
 if(WIN32)
   set(OS "win32")
@@ -40,31 +27,7 @@ file(GLOB SOEM_COMMON_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/SOEM/soem/*.h")
 file(GLOB SOEM_OSAL_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/SOEM/osal/${OS}/*.h")
 file(GLOB SOEM_OSHW_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/SOEM/oshw/${OS}/*.h")
 
-# Copy header to ROS-standard location in devel space to satisfy catkin_package
-add_custom_target(CopyHeaders ALL
-                  COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                          ${SOEM_COMMON_HEADERS}
-                          ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-                  COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                          ${CMAKE_CURRENT_SOURCE_DIR}/SOEM/osal/osal.h
-                          ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-                  COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                          ${SOEM_OSAL_HEADERS}
-                          ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-                  COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                          ${SOEM_OSHW_HEADERS}
-                          ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-                  COMMENT "Copying SOEM headers to ROS-standard in devel space location.")
-
-if(WIN32)
-  add_custom_target(CopyWpcapHeaders ALL
-                  COMMAND ${CMAKE_COMMAND} -E copy_directory
-                          ${CMAKE_CURRENT_SOURCE_DIR}/SOEM/oshw/${OS}/wpcap/Include/
-                          ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-                  COMMENT "Copying Wpcap headers to ROS-standard in devel space location.")
-endif()
-
-# explicitely find pthread to be able to explicitely export the pthread dependency via catkin_package
+# explicitely find pthread to be able to explicitely export the pthread dependency
 # see https://github.com/ros/ros_comm/issues/135
 set(PTHREAD_LIB "")
 find_package(Threads)
@@ -79,12 +42,13 @@ if(CMAKE_THREAD_LIBS_INIT)
   endif()
 endif()
 
-# export dependencies and targets to catkin
-# explicitely export pthread, as stated above
-catkin_package(
-  CFG_EXTRAS soem-ros-extras.cmake
-  LIBRARIES soem ${PTHREAD_LIB}
-)
+
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  set(ament_cmake_cpplint_FOUND TRUE)
+  ament_lint_auto_find_test_dependencies()
+endif()
+
 
 # SOEM is, by default, built with position-dependent code as a static library.
 # To be able to include SOEM in a dynamic library (default ROS convention),
@@ -95,6 +59,26 @@ add_compile_options(-fPIC)
 # removed any pre-defined `WIN32_LEAN_AND_MEAN`.
 # Otherwise, many symbols will be reported as missing.
 remove_definitions(-DWIN32_LEAN_AND_MEAN)
-#catkin_lint: ignore duplicate_cmd
-#catkin_lint: ignore subproject
 add_subdirectory(SOEM)
+
+ament_export_include_directories(include)
+ament_export_libraries(${PROJECT_NAME})
+ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+ament_target_dependencies(${PROJECT_NAME} ${PTHREAD_LIB})
+
+#install all Headers
+install(
+  FILES ${SOEM_COMMON_HEADERS} ${SOEM_OSAL_HEADERS} ${SOEM_OSHW_HEADERS}
+  DESTINATION include
+)
+
+install(
+  TARGETS ${PROJECT_NAME}
+  EXPORT export_${PROJECT_NAME}
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+ament_package()
