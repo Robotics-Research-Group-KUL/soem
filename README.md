@@ -1,3 +1,9 @@
+# SOEM FOR ROS2
+
+To install this you need to submodule!
+
+
+
 # SOEM for ROS
 
 **Table of Contents**
