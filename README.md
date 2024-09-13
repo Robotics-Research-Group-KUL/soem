@@ -1,5 +1,9 @@
 # SOEM for ROS
+__Note: for Ros2 use the foxy-devel branch__
 
+```
+git clone https://github.com/Robotics-Research-Group-KUL/python_gui_ros2.git $RTT_ROS_UTILITIES/src/python_gui \
+```
 **Table of Contents**
 
 - [SOEM ROS Package Upgrade](#SOEM-ROS-Package-Upgrade)
